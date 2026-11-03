@@ -1,66 +1,120 @@
+import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
 public class TTTGameLogic
 {
+    // CONSTANTS //
+    // Board dimensions
     final int ROWS = 3;
     final int COLS = 3;
 
-    final String X = "X";
-    final String O = "O";
-
+    // When to check end conditions
     final int MIN_MOVES_TO_WIN = 5;
     final int MIN_MOVES_TO_DRAW = 7;
 
-    TTTBoard board;
-    String[][] placements;
+    // Possible game conditions
+    final String PLAYING = "playing";
+    final String X_WINS = "X wins";
+    final String O_WINS = "O wins";
+    final String DRAW = "draw";
 
-    int moveNum = 0;
-    String nextToMove = X;
+    // Possible placements
+    final String X = "X";
+    final String O = "O";
+    final String BLANK = " ";
 
-    public TTTGameLogic(TTTBoard board)
+    // OBJECT VARIABLES
+    String[][] board;
+    int moveNum;
+    String nextToMove;
+
+    public TTTGameLogic()
     {
-        this.board = board;
-        placements = board.getBoardPlacements();
-    }
-
-    public String winDrawOrContinue()
-    {
-        String result;
-        moveNum++;
-
-        if (moveNum >= MIN_MOVES_TO_WIN && isWin())
-        {
-            result = nextToMove;
-        }
-        else if (moveNum >= MIN_MOVES_TO_DRAW && isDraw())
-        {
-            result = "draw";
-        }
-        else
-        {
-            result = "continue";
-        }
-
-        nextToMove = nextToMove.equals(X) ? O : X;
-
-
-        return result;
+        board = new String[ROWS][COLS];
+        resetGame();
     }
 
     public void resetGame()
     {
-        board.clearBoard();
+        for (int i = 0; i < ROWS; i++)
+        {
+            for (int j = 0; j < COLS; j++)
+            {
+                board[i][j] = BLANK;
+            }
+        }
         moveNum = 0;
         nextToMove = X;
-        board.setNextToPlay(X);
     }
 
-    public void updatePlacements() {placements = board.getBoardPlacements();}
-
-    public boolean isWin()
+    public boolean isEmpty(int row, int col)
     {
-        updatePlacements();
+        return board[row][col].equals(BLANK);
+    }
+
+    public String getNextToMove()
+    {
+        return nextToMove;
+    }
+
+    public String move(int row, int col)
+    {
+        String gameStatus;
+
+        if (isEmpty(row, col))
+        {
+            board[row][col] = nextToMove;
+            moveNum++;
+
+            gameStatus = getGameStatus();
+
+            if (nextToMove.equals(X))
+            {
+                nextToMove = O;
+            }
+            else
+            {
+                nextToMove = X;
+            }
+        }
+        else
+        {
+            gameStatus = "ERROR";
+        }
+
+        return gameStatus;
+    }
+
+    private String getGameStatus()
+    {
+        String status;
+
+        if (moveNum >= MIN_MOVES_TO_WIN && isWin())
+        {
+            if (nextToMove.equals(X))
+            {
+                status = X_WINS;
+            }
+            else
+            {
+                status = O_WINS;
+            }
+        }
+        else if (moveNum >= MIN_MOVES_TO_DRAW && isDraw())
+        {
+            status = DRAW;
+        }
+        else
+        {
+            status = PLAYING;
+        }
+
+        return status;
+    }
+
+    private boolean isWin()
+    {
         return isRowWin() || isColWin() || isDiagonalWin();
     }
 
@@ -70,12 +124,12 @@ public class TTTGameLogic
 
         for (int i = 0; i < ROWS; i++)
         {
-            if ((placements[i][0].equals(X)
-                    && placements[i][1].equals(X)
-                    && placements[i][2].equals(X))
-                    || (placements[i][0].equals(O)
-                    && placements[i][1].equals(O)
-                    && placements[i][2].equals(O)))
+            if ((board[i][0].equals(X)
+                    && board[i][1].equals(X)
+                    && board[i][2].equals(X))
+                    || (board[i][0].equals(O)
+                    && board[i][1].equals(O)
+                    && board[i][2].equals(O)))
             {
                 isRowWin = true;
             }
@@ -90,12 +144,12 @@ public class TTTGameLogic
 
         for (int i = 0; i < COLS; i++)
         {
-            if ((placements[0][i].equals(X)
-                    && placements[1][i].equals(X)
-                    && placements[2][i].equals(X))
-                    || (placements[0][i].equals(O)
-                    && placements[1][i].equals(O)
-                    && placements[2][i].equals(O)))
+            if ((board[0][i].equals(X)
+                    && board[1][i].equals(X)
+                    && board[2][i].equals(X))
+                    || (board[0][i].equals(O)
+                    && board[1][i].equals(O)
+                    && board[2][i].equals(O)))
             {
                 isColWin = true;
             }
@@ -106,16 +160,15 @@ public class TTTGameLogic
 
     private boolean isDiagonalWin()
     {
-        return (!(placements[1][1].equals(" "))
-                && (placements[1][1].equals(placements[0][0])
-                && placements[1][1].equals(placements[2][2]))
-                || (placements[1][1].equals(placements[0][2])
-                && placements[1][1].equals(placements[2][0])));
+        return (!(board[1][1].equals(" "))
+                && (board[1][1].equals(board[0][0])
+                && board[1][1].equals(board[2][2]))
+                || (board[1][1].equals(board[0][2])
+                && board[1][1].equals(board[2][0])));
     }
 
-    public boolean isDraw()
+    private boolean isDraw()
     {
-        updatePlacements();
         boolean xFlag = false;
         boolean oFlag = false;
         // Check all 8 win vectors for an X and O so
@@ -123,15 +176,15 @@ public class TTTGameLogic
         // Check for row ties
         for(int row=0; row < ROWS; row++)
         {
-            if(placements[row][0].equals(X) ||
-                    placements[row][1].equals(X) ||
-                    placements[row][2].equals(X))
+            if(board[row][0].equals(X) ||
+                    board[row][1].equals(X) ||
+                    board[row][2].equals(X))
             {
                 xFlag = true; // there is an X in this row
             }
-            if(placements[row][0].equals(O) ||
-                    placements[row][1].equals(O) ||
-                    placements[row][2].equals(O))
+            if(board[row][0].equals(O) ||
+                    board[row][1].equals(O) ||
+                    board[row][2].equals(O))
             {
                 oFlag = true; // there is an O in this row
             }
@@ -147,15 +200,15 @@ public class TTTGameLogic
         // Now scan the columns
         for(int col=0; col < COLS; col++)
         {
-            if(placements[0][col].equals(X) ||
-                    placements[1][col].equals(X) ||
-                    placements[2][col].equals(X))
+            if(board[0][col].equals(X) ||
+                    board[1][col].equals(X) ||
+                    board[2][col].equals(X))
             {
                 xFlag = true; // there is an X in this col
             }
-            if(placements[0][col].equals(O) ||
-                    placements[1][col].equals(O) ||
-                    placements[2][col].equals(O))
+            if(board[0][col].equals(O) ||
+                    board[1][col].equals(O) ||
+                    board[2][col].equals(O))
             {
                 oFlag = true; // there is an O in this col
             }
@@ -168,15 +221,15 @@ public class TTTGameLogic
         // Now check for the diagonals
         xFlag = oFlag = false;
 
-        if(placements[0][0].equals(X) ||
-                placements[1][1].equals(X) ||
-                placements[2][2].equals(X) )
+        if(board[0][0].equals(X) ||
+                board[1][1].equals(X) ||
+                board[2][2].equals(X) )
         {
             xFlag = true;
         }
-        if(placements[0][0].equals(O) ||
-                placements[1][1].equals(O) ||
-                placements[2][2].equals(O) )
+        if(board[0][0].equals(O) ||
+                board[1][1].equals(O) ||
+                board[2][2].equals(O) )
         {
             oFlag = true;
         }
@@ -186,15 +239,15 @@ public class TTTGameLogic
         }
         xFlag = oFlag = false;
 
-        if(placements[0][2].equals(X) ||
-                placements[1][1].equals(X) ||
-                placements[2][0].equals(X) )
+        if(board[0][2].equals(X) ||
+                board[1][1].equals(X) ||
+                board[2][0].equals(X) )
         {
             xFlag =  true;
         }
-        if(placements[0][2].equals(O) ||
-                placements[1][1].equals(O) ||
-                placements[2][0].equals(O) )
+        if(board[0][2].equals(O) ||
+                board[1][1].equals(O) ||
+                board[2][0].equals(O) )
         {
             oFlag =  true;
         }

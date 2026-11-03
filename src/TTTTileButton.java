@@ -2,19 +2,16 @@ import javax.swing.*;
 
 public class TTTTileButton extends JButton
 {
-    private String placement;
+    int row, col;
 
-    public TTTTileButton()
+    public TTTTileButton(int row, int col)
     {
         super();
-        this.placement = " ";
+        this.row = row;
+        this.col = col;
     }
 
-    public String getPlacement() {
-        return placement;
-    }
+    public int getRow() {return row;}
 
-    public void setPlacement(String placement) {
-        this.placement = placement;
-    }
+    public int getCol() {return col;}
 }
